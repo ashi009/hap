@@ -15,6 +15,7 @@ func newGroupParams(g int64, n []byte) GroupParams {
 	}
 }
 
+// Size returns the size of the group in bytes.
 func (gp *GroupParams) Size() int {
 	return gp.N.BitLen() / 8
 }
