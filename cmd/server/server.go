@@ -93,6 +93,7 @@ type Characteristic struct {
 	AID    uint64          `json:"aid"`
 	IID    uint64          `json:"iid"`
 	Value  json.RawMessage `json:"value"`
+	Event  *bool           `json:"ev,omitempty"`
 	Status int             `json:"status,omitempty"` // Output only
 }
 
@@ -110,7 +111,7 @@ func updateCharacteristics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	glog.Infof("updateCharacteristics: \n%s", pretty.Sprint(req))
+	glog.Info(pretty.Sprint(req))
 	w.WriteHeader(http.StatusNoContent)
 	// resp := &UpdateCharacteristicsResponse{
 	// 	Characteristics: make([]*Characteristic, len(req.Characteristics)),
@@ -172,7 +173,7 @@ func getCharacteriestics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	glog.Infof("getCharacteristics: \n%s", pretty.Sprint(req))
+	glog.Info(pretty.Sprint(req))
 	_ = req
 	w.WriteHeader(http.StatusOK)
 }

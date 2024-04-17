@@ -64,8 +64,29 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Start()
 
+	// qr := pairing.SetupPayload{
+	// 	Version:           0,
+	// 	AccessoryCategory: 2,
+	// 	IPTransport:       true,
+	// 	SetupCode:         deviceInfo.SetupCode,
+	// 	SetupID:           setupID,
+	// }.QR()
+
+	// fmt.Println("Scan this code with your HomeKit app on your iOS device to pair with this device:")
+	// for i := 0; i < qr.Size; i++ {
+	// 	for j := 0; j < qr.Size; j++ {
+	// 		if qr.Black(i, j) {
+	// 			fmt.Print("  ")
+	// 		} else {
+	// 			fmt.Print("██")
+	// 		}
+	// 	}
+	// 	fmt.Println()
+	// }
+
 	svr := &http.Server{
 		ConnState: func(c net.Conn, s http.ConnState) {
+			glog.Infof("%s: %v conn ", c.RemoteAddr(), s)
 			sc := c.(*serverConn)
 			sc.HandleStateChange(s)
 		},
@@ -76,24 +97,31 @@ func main() {
 	err = svr.Serve(listener{ln})
 	// err = svr.Serve(ln)
 	if err != nil {
-		log.Fatal(err)
+		glog.Exit(err)
 	}
 }
 
 func init() {
-	http.HandleFunc("/pair-setup", pairSetup)
-	http.HandleFunc("/pair-verify", pairVerify)
-	http.HandleFunc("/pairings", pairEdit)
-	http.HandleFunc("/accessories", getAccessories)
-	http.HandleFunc("/characteristics", handleCharacteristics)
+	http.HandleFunc("/pair-setup", logHandler(pairSetup))
+	http.HandleFunc("/pair-verify", logHandler(pairVerify))
+	http.HandleFunc("/pairings", logHandler(pairEdit))
+	http.HandleFunc("/accessories", logHandler(getAccessories))
+	http.HandleFunc("/characteristics", logHandler(handleCharacteristics))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		b, err := httputil.DumpRequest(r, true)
 		if err != nil {
-			glog.Error(err)
+			glog.Errorf("%s: %v", r.RemoteAddr, err)
 			return
 		}
 		glog.Error(string(b))
 	})
+}
+
+func logHandler(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		glog.Infof("%s: %s %v", r.RemoteAddr, r.Method, r.URL)
+		fn(w, r)
+	}
 }
 
 func randomDeviceID() string {
@@ -108,13 +136,13 @@ func randomDeviceID() string {
 func pairSetup(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		glog.Error(err)
+		glog.Errorf("%s: %v", r.RemoteAddr, err)
 		return
 	}
 	ctx := r.Context()
 	rb, err := setup.Handle(ctx, b)
 	if err != nil {
-		glog.Error(err)
+		glog.Errorf("%s: %v", r.RemoteAddr, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/pairing+tlv8")
@@ -124,7 +152,7 @@ func pairSetup(w http.ResponseWriter, r *http.Request) {
 func pairVerify(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		glog.Error(err)
+		glog.Errorf("%s: %v", r.RemoteAddr, err)
 		return
 	}
 	ctx := r.Context()
@@ -132,7 +160,7 @@ func pairVerify(w http.ResponseWriter, r *http.Request) {
 	conn := ctl.(*serverConn)
 	rb, err := conn.vs.Handle(ctx, b)
 	if err != nil {
-		glog.Error(err)
+		glog.Errorf("%s: %v", r.RemoteAddr, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/pairing+tlv8")
@@ -142,12 +170,12 @@ func pairVerify(w http.ResponseWriter, r *http.Request) {
 func pairEdit(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		glog.Error(err)
+		glog.Errorf("%s: %v", r.RemoteAddr, err)
 		return
 	}
 	rb, err := registry.Handle(r.Context(), b)
 	if err != nil {
-		glog.Error(err)
+		glog.Errorf("%s: %v", r.RemoteAddr, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/pairing+tlv8")

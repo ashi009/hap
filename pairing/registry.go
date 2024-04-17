@@ -7,6 +7,8 @@ import (
 	"hapv2/encoding/tlv8"
 	"sort"
 	"sync"
+
+	"github.com/golang/glog"
 )
 
 var (
@@ -93,6 +95,7 @@ func (r *Registry) Add(p *PairInfo) error {
 	if _, ok := r.peers[p.PairingID]; ok {
 		return ErrAlreadyPaired
 	}
+	glog.Infof("adding peer %v", p.PairingID)
 	r.peers[p.PairingID] = p
 	return nil
 }
@@ -113,6 +116,7 @@ func (r *Registry) Remove(pairingID string) error {
 		return ErrUnknownPeer
 	}
 	delete(r.peers, pairingID)
+	glog.Infof("removed peer %v", pairingID)
 	return nil
 }
 

@@ -6,6 +6,7 @@ require (
 	github.com/golang/glog v1.1.1
 	github.com/kr/pretty v0.3.1
 	golang.org/x/crypto v0.10.0
+	rsc.io/qr v0.2.0
 )
 
 require (

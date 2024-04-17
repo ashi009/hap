@@ -6,6 +6,8 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	"rsc.io/qr"
 )
 
 type Method uint8
@@ -196,6 +198,14 @@ func (p SetupPayload) URL() string {
 		s = strings.Repeat("0", 9-len(s)) + s
 	}
 	return "X-HM://" + s + p.SetupID
+}
+
+func (p SetupPayload) QR() *qr.Code {
+	c, err := qr.Encode(p.URL(), qr.L)
+	if err != nil {
+		panic(err)
+	}
+	return c
 }
 
 func SetupHash(setupID, deviceID string) []byte {

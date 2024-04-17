@@ -10,6 +10,8 @@ import (
 	"hapv2/crypto/cryptoutil"
 	"hapv2/crypto/srp"
 	"hapv2/encoding/tlv8"
+
+	"github.com/golang/glog"
 )
 
 type DeviceInfo struct {
@@ -42,56 +44,63 @@ func NewSetupSession(di *DeviceInfo, r *Registry) *SetupSession {
 }
 
 func (s *SetupSession) Handle(ctx context.Context, req []byte) ([]byte, error) {
-	conn, ok := FromContext(ctx)
-	if !ok {
-		return nil, fmt.Errorf("no conn found in context")
-	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.owner == nil {
-		s.owner = conn
-	}
-	if s.owner != conn {
-		return nil, fmt.Errorf("session already owned by another conn")
-	}
 	var pr pairSetupRequest
 	if err := tlv8.Unmarshal(req, &pr); err != nil {
 		return nil, err
 	}
 	switch pr.State {
 	case StateM1:
-		var sreq SRPStartRequest
-		if err := tlv8.Unmarshal(req, &sreq); err != nil {
-			return nil, err
-		}
-		sresp, err := s.handleSRPStart(&sreq)
-		if err != nil {
-			return nil, err
-		}
-		return tlv8.Marshal(sresp)
+		return call(s.handleSRPStart, req)
 	case StateM3:
-		var sreq SRPVerifyRequest
-		if err := tlv8.Unmarshal(req, &sreq); err != nil {
-			return nil, err
-		}
-		sresp, err := s.handleSRPVerify(&sreq)
-		if err != nil {
-			return nil, err
-		}
-		return tlv8.Marshal(sresp)
+		return call(s.handleSRPVerify, req)
 	case StateM5:
-		var sreq ExchangeRequest
-		if err := tlv8.Unmarshal(req, &sreq); err != nil {
-			return nil, err
-		}
-		sresp, err := s.handleExchange(&sreq)
-		if err != nil {
-			return nil, err
-		}
-		return tlv8.Marshal(sresp)
+		return call(s.handleExchange, req)
 	default:
 		return nil, fmt.Errorf("unexpected state: %v", pr.State)
 	}
+}
+
+func (s *SetupSession) acquireOwner(c Conn) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.owner != nil {
+		return fmt.Errorf("owner already set")
+	}
+	s.owner = c
+	return nil
+}
+
+func (s *SetupSession) assertOwner(c Conn) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.owner != c {
+		return fmt.Errorf("not owner")
+	}
+	return nil
+}
+
+func (s *SetupSession) releaseOwner(c Conn) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.owner != c {
+		return fmt.Errorf("not owner")
+	}
+	s.owner = nil
+	return nil
+}
+
+func call[Req, Resp any](fn func(*Req) (*Resp, error), b []byte) ([]byte, error) {
+	var req Req
+	if err := tlv8.Unmarshal(b, &req); err != nil {
+		return nil, err
+	}
+	glog.Infof("-> %#v", req)
+	resp, err := fn(&req)
+	if err != nil {
+		return nil, err
+	}
+	glog.Infof("<- %#v", resp)
+	return tlv8.Marshal(resp)
 }
 
 func (s *SetupSession) handleSRPStart(req *SRPStartRequest) (*SRPStartResponse, error) {

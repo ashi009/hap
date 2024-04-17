@@ -124,7 +124,7 @@ func (s *VerifySession) handleFinish(conn Conn, req *VerifyFinishRequest) (*Veri
 	}
 	peer, ok := s.knownPeers.Get(ctlInfo.PairingID)
 	if !ok {
-		return nil, fmt.Errorf("unknown peer")
+		return nil, fmt.Errorf("unknown peer: %s", ctlInfo.PairingID)
 	}
 	if !ed25519.Verify(peer.LongTermPublicKey, bytes.Join([][]byte{
 		s.ctlPublicKey.Bytes(),
@@ -133,7 +133,7 @@ func (s *VerifySession) handleFinish(conn Conn, req *VerifyFinishRequest) (*Veri
 	}, nil), ctlInfo.Signature) {
 		return nil, fmt.Errorf("invalid key")
 	}
-	glog.Infof("upgrade with shared secret %x", s.sharedSecret)
+	glog.Infof("%s: upgrade with shared secret %x", ctlInfo.PairingID, s.sharedSecret)
 	conn.Upgrade(s.sharedSecret)
 	return &VerifyFinishResponse{
 		State: StateM4,

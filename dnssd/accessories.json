@@ -1,0 +1,131 @@
+{
+  "accessories": [
+    {
+      "aid": 1,
+      "services": [
+        {
+          "characteristics": [
+            {
+              "format": "bool",
+              "iid": 2,
+              "perms": [
+                "pw"
+              ],
+              "type": "14"
+            },
+            {
+              "format": "string",
+              "iid": 3,
+              "perms": [
+                "pr"
+              ],
+              "type": "20",
+              "value": "Company Name"
+            },
+            {
+              "format": "string",
+              "iid": 4,
+              "perms": [
+                "pr"
+              ],
+              "type": "21",
+              "value": "Model Name"
+            },
+            {
+              "format": "string",
+              "iid": 5,
+              "perms": [
+                "pr"
+              ],
+              "type": "23",
+              "value": "Bridge"
+            },
+            {
+              "format": "string",
+              "iid": 6,
+              "maxLen": 64,
+              "perms": [
+                "pr"
+              ],
+              "type": "30",
+              "value": "H8Q74Q4MFCBKW"
+            },
+            {
+              "format": "string",
+              "iid": 7,
+              "perms": [
+                "pr"
+              ],
+              "type": "52",
+              "value": "1.0.0"
+            }
+          ],
+          "iid": 1,
+          "type": "3E"
+        },
+        {
+          "characteristics": [
+            {
+              "format": "tlv8",
+              "iid": 9,
+              "perms": [
+                "pr",
+                "pw"
+              ],
+              "type": "4C",
+              "value": ""
+            },
+            {
+              "format": "tlv8",
+              "iid": 10,
+              "perms": [
+                "pr",
+                "pw"
+              ],
+              "type": "4E",
+              "value": ""
+            },
+            {
+              "format": "uint8",
+              "iid": 11,
+              "perms": [
+                "pr"
+              ],
+              "type": "4F",
+              "value": 0
+            },
+            {
+              "format": "tlv8",
+              "iid": 12,
+              "perms": [
+                "pr",
+                "pw"
+              ],
+              "type": "50",
+              "value": ""
+            }
+          ],
+          "iid": 8,
+          "type": "55"
+        },
+        {
+          "characteristics": [
+            {
+              "format": "string",
+              "iid": 14,
+              "maxLen": 64,
+              "perms": [
+                "pr",
+                "ev"
+              ],
+              "type": "37",
+              "value": "1.1.0"
+            }
+          ],
+          "iid": 13,
+          "type": "A2"
+        }
+      ]
+    }
+  ]
+}

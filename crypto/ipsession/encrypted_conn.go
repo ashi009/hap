@@ -4,10 +4,11 @@ import (
 	"crypto/cipher"
 	"encoding/binary"
 	"fmt"
-	cryptotuil "hapv2/crypto/cryptoutil"
 	"io"
 	"net"
 	"sync"
+
+	"hapv2/crypto/cryptoutil"
 
 	"github.com/golang/glog"
 )
@@ -36,10 +37,10 @@ func NewEncryptedConn(c net.Conn, sharedSecret []byte) *EncryptedConn {
 		w:    frameWriter{w: c},
 		r:    frameReader{r: c},
 	}
-	crKey := cryptotuil.DeriveKey(sharedSecret, "Control-Salt", "Control-Read-Encryption-Key")
-	ec.w.aead = cryptotuil.MustNewChacha20Poly1305(crKey)
-	cwKey := cryptotuil.DeriveKey(sharedSecret, "Control-Salt", "Control-Write-Encryption-Key")
-	ec.r.aead = cryptotuil.MustNewChacha20Poly1305(cwKey)
+	crKey := cryptoutil.DeriveKey(sharedSecret, "Control-Salt", "Control-Read-Encryption-Key")
+	ec.w.aead = cryptoutil.MustNewChacha20Poly1305(crKey)
+	cwKey := cryptoutil.DeriveKey(sharedSecret, "Control-Salt", "Control-Write-Encryption-Key")
+	ec.r.aead = cryptoutil.MustNewChacha20Poly1305(cwKey)
 	return ec
 }
 
@@ -107,7 +108,7 @@ func (fr *frameReader) Read(b []byte) (n int, err error) {
 	defer fr.mu.Unlock()
 	if fr.buf == nil {
 		b, err := fr.readFrame()
-		glog.Infof("read frame: %s, %v", b, err)
+		glog.V(1).Infof("read frame: %s, %v", b, err)
 		if err != nil {
 			return 0, err
 		}
